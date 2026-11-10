@@ -16,7 +16,7 @@ The whole install is 130 MB in one folder in your home folder.
 
 ## The original game
 
-Klass of 99 is the work of Richard Jordan. He wrote it after Spectrum fans on comp.sys.sinclair named Skool Daze as the game they most wanted to see remade, and he gives it away free as BitGlint Games.
+Klass of 99 is the work of Richard Jordan. He wrote it after Spectrum fans on comp.sys.sinclair named Skool Daze as the game they most wanted to see remade.
 
 **The original game is at [bitglint.itch.io](https://bitglint.itch.io/).** Its own page, [bitglint.itch.io/klassof99](https://bitglint.itch.io/klassof99), has the Windows download this installer uses, `KlassOf99Win1.0.7.zip`, and the story that goes with the game as a second download.
 
