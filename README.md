@@ -99,6 +99,16 @@ strace -f -y -qq -e trace=openat,open,execve -o ~/ko99-build/trace1.log $W/wine 
 git archive --format=tar.gz --prefix=PiKlassOf99/ -o PiKlassOf99.tar.gz HEAD install.sh runtime.tar.xz icon.png LICENSE
 ```
 
+## Pi Projects
+
+PiKlassOf99 is one of three projects for the Raspberry Pi. One is a utility for the desktop, and two bring favourite old freeware games to the Pi with the same kind of installer.
+
+| Project | What it is |
+| --- | --- |
+| [PiOSBeachBall](https://github.com/jameshansen/PiOSBeachBall) | A spinning beachball pointer that shows when an app is loading. |
+| [PiKnytt](https://github.com/jameshansen/PiKnytt) | Knytt, the 2006 exploration platformer by Nifflas, installed and ready to play. |
+| **PiKlassOf99** | Klass of 99, Richard Jordan's Skool Daze remake, installed and ready to play. |
+
 ## AI use disclosure
 
 PiKlassOf99 was built using [Claude Code](https://claude.com/claude-code) with Claude Fable 5.2.
