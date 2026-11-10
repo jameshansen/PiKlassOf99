@@ -16,9 +16,15 @@ HERE=$(dirname "$(readlink -f "$0")")
 RUNTIME="$HERE/runtime.tar.xz"
 RUNTIME_FILES=520   # entries in runtime.tar.xz, for the progress bar
 ICON="$HERE/icon.png"
+CLOSER="$HERE/Closer.exe"   # with Closer.dll, makes the close button and Alt+F4 end the game; tools/closer.c
 DEST="$HOME/Games/KlassOf99"
-MENU="${XDG_DATA_HOME:-$HOME/.local/share}/applications/klassof99.desktop"
-SHORTCUT="$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")/klassof99.desktop"
+# The Pi's taskbar finds a window's icon through a menu entry named after the window's
+# class, ko99.exe for this game. The desktop shortcut carries the same name.
+MENU="${XDG_DATA_HOME:-$HOME/.local/share}/applications/ko99.exe.desktop"
+SHORTCUT="$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")/ko99.exe.desktop"
+# The names both had in earlier versions, cleared on install and on remove.
+OLD_MENU="$(dirname "$MENU")/klassof99.desktop"
+OLD_SHORTCUT="$(dirname "$SHORTCUT")/klassof99.desktop"
 BOOTCFG=/boot/firmware/config.txt
 
 if ! command -v zenity >/dev/null || [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
@@ -112,6 +118,7 @@ install_files() (
   echo 96
   echo "# Adding the menu entry and the desktop shortcut..."
   cp "$ICON" "$DEST/icon.png"
+  cp "$CLOSER" "${CLOSER%.exe}.dll" "$DEST/"
   cat >"$MENU" <<EOF
 [Desktop Entry]
 Type=Application
@@ -123,15 +130,15 @@ Terminal=false
 Categories=Game;
 StartupWMClass=ko99.exe
 EOF
-  rm -f "$SHORTCUT"
+  rm -f "$SHORTCUT" "$OLD_MENU" "$OLD_SHORTCUT"
   cp "$MENU" "$SHORTCUT"
   "$DEST/wine/bin/wine" --version >&2
 )
 
 [ "$(dpkg --print-architecture 2>/dev/null)" = arm64 ] ||
   fail "This installer is for 64-bit Raspberry Pi OS. This system is $(uname -m)."
-[ -f "$RUNTIME" ] && [ -f "$ICON" ] ||
-  fail "runtime.tar.xz and icon.png belong next to install.sh, and one of them is missing. Download the whole package again."
+[ -f "$RUNTIME" ] && [ -f "$ICON" ] && [ -f "$CLOSER" ] && [ -f "${CLOSER%.exe}.dll" ] ||
+  fail "A file that belongs next to install.sh is missing. Download the whole package again."
 
 # The game's zip, if a valid one sits next to this script.
 zip=$(find "$HERE" -maxdepth 1 -iname 'klassof99win*.zip' | sort | tail -1)
@@ -147,7 +154,7 @@ while [ "$step" != install ]; do
         --cancel-label="Cancel" --ok-label="Reinstall" --extra-button="Remove")
       status=$?
       if [ "$choice" = "Remove" ]; then
-        rm -rf "$DEST" "$MENU" "$SHORTCUT"
+        rm -rf "$DEST" "$MENU" "$SHORTCUT" "$OLD_MENU" "$OLD_SHORTCUT"
         note "$GAME has been removed from this Raspberry Pi."
         exit 0
       fi

@@ -29,6 +29,7 @@ PiKlassOf99 is an unofficial installer and is not affiliated with BitGlint Games
 - **Small.** A stock Wine install for this game takes 2.4 GB plus a 2.3 GB prefix. This one is trimmed to the files the game opens, 123 MB in all.
 - **Self-contained.** Everything lives in `Games/KlassOf99`. Nothing is installed system-wide and no packages are added.
 - **Ready for the Pi 5 and Pi 500.** Wine needs a kernel with 4K memory pages, and the installer switches the Pi to the one it already has.
+- **Closes like any other window.** The close button and Alt+F4 leave the game and keep your settings. The game on its own takes no notice of either.
 - **Reinstall or remove.** Run the installer again. Reinstalling keeps your saved settings.
 
 ![The installer's welcome, game files, progress and finished screens](docs/installer.png)
@@ -70,7 +71,9 @@ The window size is set in the game under Options, Video Mode.
 
 Klass of 99 is a 32-bit Windows program. It runs under [Hangover](https://github.com/AndreRH/hangover), a build of Wine for ARM64 that emulates only the game's own x86 code with Box64 and runs everything else natively.
 
-`runtime.tar.xz` holds that Wine, cut down to this game. Hangover ran the game under `strace`, and only the files it opened were kept, with the debug data removed from each DLL. The Wine prefix keeps its registry and folders, and its DLLs are links into the same Wine. The machine that built it leaves no trace in it, so it works for any user in any home folder.
+`runtime.tar.xz` holds that Wine, cut down to this game. Hangover ran the game under `strace`, and only the files it opened were kept, with the debug data removed from each DLL. The Wine prefix keeps its registry and folders, and its DLLs are links into the same Wine. The machine that built it leaves no trace in it, so it works for any user in any home folder. Its registry has Wine take keyboard focus from the window manager the plain way (`UseTakeFocus` set to `N`). With Wine's default, the Pi's desktop now and then never passed the keyboard to the game.
+
+Klass of 99 only leaves through Quit on its title screen. Its engine marks the window as having no close, and Wine drops a close request for a window like that, so the close button and Alt+F4 never reach the game. `Closer.exe` starts the game and loads `Closer.dll` into it, both built from `tools/closer.c`. The DLL allows closing again. When the window is asked to close, it presses the game's own keys for you, Escape and then Y at "Do you really want to quit?", until Escape at the title screen quits. That is the way out on which the game saves its settings. A game still running a few seconds later is ended.
 
 ## Building the runtime
 
@@ -93,10 +96,12 @@ cd ~/ko99-build/game
 strace -f -y -qq -e trace=openat,open,execve -o ~/ko99-build/trace1.log $W/wine KO99.exe
 ```
 
-`tools/build-runtime.sh` then trims Hangover to the traced files, and `tools/pack-runtime.sh ~/ko99-build/runtime` writes `runtime.tar.xz`. A release is the installer, the runtime, the icon and the licence in one archive:
+`tools/build-runtime.sh` then trims Hangover to the traced files, and `tools/pack-runtime.sh ~/ko99-build/runtime` writes `runtime.tar.xz`. `Closer.exe` and `Closer.dll` are rebuilt with `tools/build-closer.sh`, which needs [zig](https://ziglang.org) and runs on any machine.
+
+A release is the installer, the runtime, the close helper, the icon and the licence in one archive:
 
 ```bash
-git archive --format=tar.gz --prefix=PiKlassOf99/ -o PiKlassOf99.tar.gz HEAD install.sh runtime.tar.xz icon.png LICENSE
+git archive --format=tar.gz --prefix=PiKlassOf99/ -o PiKlassOf99.tar.gz HEAD install.sh runtime.tar.xz Closer.exe Closer.dll icon.png LICENSE
 ```
 
 ## Pi Projects
@@ -121,4 +126,4 @@ The runtime is built from [Hangover](https://github.com/AndreRH/hangover) 11.16 
 
 ## Licence
 
-The installer and build scripts are free software under the [MIT licence](LICENSE). The Wine and Box64 binaries in `runtime.tar.xz` keep their own licences, named above.
+The installer, the close helper and the build scripts are free software under the [MIT licence](LICENSE). The Wine and Box64 binaries in `runtime.tar.xz` keep their own licences, named above.

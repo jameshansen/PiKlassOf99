@@ -25,6 +25,23 @@ for path in paths:
         f.write(text)
 PY
 
+# Wine takes keyboard focus from the window manager the plain way. Left to its default,
+# where it sets the focus itself, labwc now and then never hands the game the keyboard.
+python3 - prefix/user.reg <<'PY'
+import re, sys, time
+head, value = r"[Software\\Wine\\X11 Driver]", '"UseTakeFocus"="N"\n'
+with open(sys.argv[1], encoding="latin-1", newline="") as f:
+    text = f.read()
+if '"UseTakeFocus"' not in text:
+    if head in text:   # after the key's header line and its #time line
+        text = re.sub(re.escape(head) + r"[^\n]*\n(?:#time=[^\n]*\n)?", lambda m: m.group(0) + value, text, count=1)
+    else:
+        text = text.rstrip("\n") + f"\n\n{head} {int(time.time())}\n{value}"
+    with open(sys.argv[1], "w", encoding="latin-1", newline="") as f:
+        f.write(text)
+assert text.count(head) == 1 and value in text
+PY
+
 cat > run.sh <<'EOF'
 #!/bin/sh
 # Klass of 99: a 32-bit Windows game, run with the trimmed Wine kept in this folder.
@@ -35,7 +52,9 @@ export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
 # Wake the X server first. If Wine is the first X client of an Xwayland that has
 # not started yet, the game window never appears.
 xdpyinfo >/dev/null 2>&1
-cd "$here/game" && exec "$here/wine/bin/wine" KO99.exe
+# The game takes no notice of its window's close button or of Alt+F4. Closer.exe
+# starts the game and makes both leave it, the way Quit on the title screen does.
+cd "$here/game" && exec "$here/wine/bin/wine" "$here/Closer.exe" KO99.exe
 EOF
 chmod +x run.sh
 
